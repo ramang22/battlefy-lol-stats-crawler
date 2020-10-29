@@ -7,15 +7,17 @@ import time
 from selenium.webdriver.chrome.options import Options
 import xlsxwriter
 
-NAME_COL = 0
-K_COL = 1
-D_COL = 2
-A_COL = 3
-CS_COL = 4
-GOLD_COL = 5
-DMG_COL = 6
-WIN_COL = 7
-TIME_COL = 8
+TEAM_COL = 0
+NAME_COL = 1
+K_COL = 2
+D_COL = 3
+A_COL = 4
+CS_COL = 5
+GOLD_COL = 6
+DMG_COL = 7
+WIN_COL = 8
+GAMES_COL = 9
+TIME_COL = 10
 ROW = 0
 
 
@@ -32,6 +34,7 @@ option.add_experimental_option("prefs", {
 
 workbook = xlsxwriter.Workbook('lol_stats.xlsx')
 worksheet = workbook.add_worksheet()
+worksheet.write(ROW, TEAM_COL, "TEAM NAME")
 worksheet.write(ROW, NAME_COL, "Meno")
 worksheet.write(ROW, K_COL, "Kills")
 worksheet.write(ROW, D_COL, "Deaths")
@@ -40,7 +43,9 @@ worksheet.write(ROW, CS_COL, "CS")
 worksheet.write(ROW, GOLD_COL, "GOLD")
 worksheet.write(ROW, DMG_COL, "DMG")
 worksheet.write(ROW, WIN_COL, "WIN")
+worksheet.write(ROW, GAMES_COL, "NUM. GAMES")
 worksheet.write(ROW, TIME_COL, "TIME")
+
 ROW += 1
 
 date_format = workbook.add_format({'num_format': "hh:mm:ss",
@@ -52,11 +57,10 @@ with open(filepath) as fp:
    cnt = 1
    while line:
        link = line.strip()
-       with webdriver.Chrome(chrome_options=option,executable_path=r"C:\Users\ramang\Developer\battlefy-lol-stats-crawler\chromedriver_win32\chromedriver.exe") as driver:
-        wait = WebDriverWait(driver, 3)
+       with webdriver.Chrome(chrome_options=option,executable_path=r"C:\Users\william.brach\Developer\battlefy-lol-stats-crawler\chromedriver_win32\chromedriver.exe") as driver:
+        wait = WebDriverWait(driver, 30)
         driver.get(link)   
         print("#### SEARCH DONE {0} ####".format(str(cnt)))
-
         try:
             # team 1
             for page in range(1,4):
@@ -85,6 +89,8 @@ with open(filepath) as fp:
                         time = wait.until(presence_of_element_located((By.XPATH, "/html/body/bf-app/main/div/div/div/bf-tournament/div[2]/div/div[4]/div/div/div/div/div/bf-match/div/div[3]/div[2]/bfy-lol-match-stats/div/div/div/bfy-lol-stats["+str(page)+"]/div/div/div[2]/div/h4/span[1]")))
                         time = time.text.replace("m ",":").replace("s","").strip()
                         time = "00:"+time
+                        teamName = wait.until(presence_of_element_located((By.XPATH, "/html/body/bf-app/main/div/div/div/bf-tournament/div[2]/div/div[4]/div/div/div/div/div/bf-match/div/div[3]/div[2]/bfy-lol-match-stats/div/div/div/bfy-lol-stats["+str(page)+"]/div/div/div["+str(team)+"]/div/h2/span")))
+                        worksheet.write(ROW, TEAM_COL, teamName.text)
                         worksheet.write(ROW, NAME_COL, nameOne.text)
                         worksheet.write(ROW, K_COL, int(kda[0].strip()))
                         worksheet.write(ROW, D_COL, int(kda[1].strip()))
@@ -93,6 +99,7 @@ with open(filepath) as fp:
                         worksheet.write(ROW, GOLD_COL, int(csOne.text.split("\n")[2].split("Gold")[0].replace(",","")))
                         worksheet.write(ROW, DMG_COL, int(dmg.text.split("\n")[0].replace(",","")))
                         worksheet.write(ROW, WIN_COL, win)
+                        worksheet.write(ROW, GAMES_COL, 1)
                         worksheet.write(ROW, TIME_COL, time,date_format)
                         ROW += 1
 
